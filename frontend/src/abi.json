@@ -1,0 +1,101 @@
+[
+  {
+    "inputs": [
+      { "internalType": "address payable", "name": "recipient", "type": "address" },
+      { "internalType": "string", "name": "description", "type": "string" },
+      { "internalType": "address[]", "name": "reviewers", "type": "address[]" },
+      { "internalType": "uint256", "name": "quorumThreshold", "type": "uint256" }
+    ],
+    "name": "createGrant",
+    "outputs": [{ "internalType": "uint256", "name": "id", "type": "uint256" }],
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "uint256", "name": "id", "type": "uint256" }],
+    "name": "approve",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "uint256", "name": "id", "type": "uint256" }],
+    "name": "cancel",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "uint256", "name": "id", "type": "uint256" }],
+    "name": "getGrant",
+    "outputs": [
+      { "internalType": "address", "name": "proposer", "type": "address" },
+      { "internalType": "address", "name": "recipient", "type": "address" },
+      { "internalType": "uint256", "name": "amount", "type": "uint256" },
+      { "internalType": "string", "name": "description", "type": "string" },
+      { "internalType": "address[]", "name": "reviewers", "type": "address[]" },
+      { "internalType": "uint256", "name": "quorumThreshold", "type": "uint256" },
+      { "internalType": "uint256", "name": "approvalCount", "type": "uint256" },
+      { "internalType": "bool", "name": "executed", "type": "bool" },
+      { "internalType": "bool", "name": "cancelled", "type": "bool" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "id", "type": "uint256" },
+      { "internalType": "address", "name": "reviewer", "type": "address" }
+    ],
+    "name": "hasApproved",
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "grantCount",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "uint256", "name": "id", "type": "uint256" },
+      { "indexed": false, "internalType": "address", "name": "proposer", "type": "address" },
+      { "indexed": false, "internalType": "address", "name": "recipient", "type": "address" },
+      { "indexed": false, "internalType": "uint256", "name": "amount", "type": "uint256" },
+      { "indexed": false, "internalType": "uint256", "name": "threshold", "type": "uint256" }
+    ],
+    "name": "GrantCreated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "uint256", "name": "id", "type": "uint256" },
+      { "indexed": false, "internalType": "address", "name": "reviewer", "type": "address" }
+    ],
+    "name": "Approved",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "uint256", "name": "id", "type": "uint256" },
+      { "indexed": false, "internalType": "address", "name": "recipient", "type": "address" },
+      { "indexed": false, "internalType": "uint256", "name": "amount", "type": "uint256" }
+    ],
+    "name": "GrantExecuted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      { "indexed": true, "internalType": "uint256", "name": "id", "type": "uint256" }
+    ],
+    "name": "GrantCancelled",
+    "type": "event"
+  }
+]

@@ -1,0 +1,13 @@
+{
+  "name": "quorum-grants",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": ["contracts", "backend", "frontend"],
+  "scripts": {
+    "compile": "npm run compile --workspace=contracts",
+    "test": "npm run test --workspace=contracts",
+    "deploy:local": "npm run deploy:local --workspace=contracts",
+    "backend": "npm run dev --workspace=backend",
+    "frontend": "npm run dev --workspace=frontend"
+  }
+}
