@@ -19,11 +19,18 @@ contract QuorumGrants {
 
     uint256 public grantCount;
     mapping(uint256 => Grant) private grants;
+    mapping(address => uint256[]) private reviewerGrantIds;
+    mapping(address => uint256[]) private proposerGrantIds;
 
     event GrantCreated(uint256 indexed id, address proposer, address recipient, uint256 amount, uint256 threshold);
     event Approved(uint256 indexed id, address reviewer);
     event GrantExecuted(uint256 indexed id, address recipient, uint256 amount);
     event GrantCancelled(uint256 indexed id);
+
+    modifier grantExists(uint256 id) {
+        require(id < grantCount, "Grant does not exist");
+        _;
+    }
 
     modifier onlyReviewer(uint256 id) {
         require(_isReviewer(id, msg.sender), "Not a reviewer");
@@ -48,8 +55,16 @@ contract QuorumGrants {
         uint256 quorumThreshold
     ) external payable returns (uint256 id) {
         require(msg.value > 0, "Must fund grant");
+        require(recipient != address(0), "Invalid recipient");
         require(reviewers.length > 0, "Need reviewers");
         require(quorumThreshold > 0 && quorumThreshold <= reviewers.length, "Invalid threshold");
+
+        for (uint256 i = 0; i < reviewers.length; i++) {
+            require(reviewers[i] != address(0), "Invalid reviewer");
+            for (uint256 j = i + 1; j < reviewers.length; j++) {
+                require(reviewers[i] != reviewers[j], "Duplicate reviewer");
+            }
+        }
 
         id = grantCount++;
         Grant storage g = grants[id];
@@ -60,11 +75,16 @@ contract QuorumGrants {
         g.reviewers = reviewers;
         g.quorumThreshold = quorumThreshold;
 
+        for (uint256 i = 0; i < reviewers.length; i++) {
+            reviewerGrantIds[reviewers[i]].push(id);
+        }
+        proposerGrantIds[msg.sender].push(id);
+
         emit GrantCreated(id, msg.sender, recipient, msg.value, quorumThreshold);
     }
 
     /// @notice A reviewer approves a grant. Executes automatically when quorum is reached.
-    function approve(uint256 id) external onlyReviewer(id) active(id) {
+    function approve(uint256 id) external grantExists(id) onlyReviewer(id) active(id) {
         Grant storage g = grants[id];
         require(!g.approved[msg.sender], "Already approved");
 
@@ -79,7 +99,7 @@ contract QuorumGrants {
     }
 
     /// @notice Proposer can cancel a grant before execution to reclaim funds.
-    function cancel(uint256 id) external onlyProposer(id) active(id) {
+    function cancel(uint256 id) external grantExists(id) onlyProposer(id) active(id) {
         grants[id].cancelled = true;
         uint256 amount = grants[id].amount;
         grants[id].amount = 0;
@@ -106,7 +126,7 @@ contract QuorumGrants {
 
     // --- View functions ---
 
-    function getGrant(uint256 id) external view returns (
+    function getGrant(uint256 id) external view grantExists(id) returns (
         address proposer,
         address recipient,
         uint256 amount,
@@ -125,7 +145,17 @@ contract QuorumGrants {
         );
     }
 
-    function hasApproved(uint256 id, address reviewer) external view returns (bool) {
+    function hasApproved(uint256 id, address reviewer) external view grantExists(id) returns (bool) {
         return grants[id].approved[reviewer];
+    }
+
+    /// @notice Returns all grant IDs where `reviewer` is part of the quorum set.
+    function getGrantIdsByReviewer(address reviewer) external view returns (uint256[] memory) {
+        return reviewerGrantIds[reviewer];
+    }
+
+    /// @notice Returns all grant IDs proposed by `proposer`.
+    function getGrantIdsByProposer(address proposer) external view returns (uint256[] memory) {
+        return proposerGrantIds[proposer];
     }
 }

@@ -109,4 +109,80 @@ describe("QuorumGrants", function () {
       )
     ).to.be.revertedWith("Invalid threshold");
   });
+
+  it("rejects a zero-address recipient", async () => {
+    await expect(
+      contract.connect(proposer).createGrant(
+        ethers.ZeroAddress, "test", [r1.address, r2.address], 1,
+        { value: ethers.parseEther("1") }
+      )
+    ).to.be.revertedWith("Invalid recipient");
+  });
+
+  it("rejects a zero-address reviewer", async () => {
+    await expect(
+      contract.connect(proposer).createGrant(
+        recipient.address, "test", [r1.address, ethers.ZeroAddress], 1,
+        { value: ethers.parseEther("1") }
+      )
+    ).to.be.revertedWith("Invalid reviewer");
+  });
+
+  it("rejects duplicate reviewers", async () => {
+    await expect(
+      contract.connect(proposer).createGrant(
+        recipient.address, "test", [r1.address, r2.address, r1.address], 2,
+        { value: ethers.parseEther("1") }
+      )
+    ).to.be.revertedWith("Duplicate reviewer");
+  });
+
+  it("reverts on getGrant for a non-existent id", async () => {
+    await expect(contract.getGrant(0)).to.be.revertedWith("Grant does not exist");
+  });
+
+  it("reverts on hasApproved for a non-existent id", async () => {
+    await expect(contract.hasApproved(0, r1.address)).to.be.revertedWith("Grant does not exist");
+  });
+
+  it("reverts on approve for a non-existent id", async () => {
+    await expect(contract.connect(r1).approve(0)).to.be.revertedWith("Grant does not exist");
+  });
+
+  it("reverts on cancel for a non-existent id", async () => {
+    await expect(contract.connect(proposer).cancel(0)).to.be.revertedWith("Grant does not exist");
+  });
+
+  it("prevents approval after execution", async () => {
+    const id = await createGrant(2);
+    await contract.connect(r1).approve(id);
+    await contract.connect(r2).approve(id); // executes
+    await expect(contract.connect(r3).approve(id)).to.be.revertedWith("Grant not active");
+  });
+
+  it("prevents cancellation after execution", async () => {
+    const id = await createGrant(2);
+    await contract.connect(r1).approve(id);
+    await contract.connect(r2).approve(id); // executes
+    await expect(contract.connect(proposer).cancel(id)).to.be.revertedWith("Grant not active");
+  });
+
+  it("indexes grant ids by reviewer", async () => {
+    const idA = await createGrant(2);
+    const idB = await createGrant(3);
+    const r1Ids = await contract.getGrantIdsByReviewer(r1.address);
+    expect(r1Ids.map((n) => Number(n))).to.deep.equal([Number(idA), Number(idB)]);
+  });
+
+  it("indexes grant ids by proposer", async () => {
+    const idA = await createGrant(2);
+    const idB = await createGrant(3);
+    const proposerIds = await contract.getGrantIdsByProposer(proposer.address);
+    expect(proposerIds.map((n) => Number(n))).to.deep.equal([Number(idA), Number(idB)]);
+  });
+
+  it("returns an empty array for an address with no grants", async () => {
+    const ids = await contract.getGrantIdsByReviewer(other.address);
+    expect(ids).to.deep.equal([]);
+  });
 });

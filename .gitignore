@@ -3,4 +3,5 @@ frontend/dist/
 contracts/artifacts/
 contracts/cache/
 backend/src/contract-address.json
+backend/.env
 frontend/.env

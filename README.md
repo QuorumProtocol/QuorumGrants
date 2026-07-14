@@ -104,15 +104,29 @@ Called by the proposer. Cancels the grant and returns funds to the proposer. Onl
 
 ### `getGrant(id)`
 
-Returns full grant state: proposer, recipient, amount, description, reviewers, threshold, approval count, and status flags.
+Returns full grant state: proposer, recipient, amount, description, reviewers, threshold, approval count, and status flags. Reverts with `"Grant does not exist"` if `id >= grantCount`.
+
+### `getGrantIdsByReviewer(address)` / `getGrantIdsByProposer(address)`
+
+Returns the list of grant IDs where the given address is a reviewer, or the proposer, respectively. Backs the backend's per-address listing endpoints.
+
+### Validation
+
+`createGrant` rejects a zero-address recipient, zero-address reviewers, and duplicate entries in the reviewer set.
 
 ## Backend API
 
+Copy `backend/.env.example` to `backend/.env` to configure `RPC_URL` and `PORT` (both optional, defaults shown in the example file).
+
 | Method | Endpoint | Description |
 |--------|----------|-------------|
+| GET | `/api/health` | Service status and configured contract address |
 | GET | `/api/count` | Total number of grants |
-| GET | `/api/grants/:id` | Grant details by ID |
+| GET | `/api/grants` | Paginated grant list (`?limit=` up to 100, default 20; `?offset=`) |
+| GET | `/api/grants/:id` | Grant details by ID (404 if it doesn't exist) |
 | GET | `/api/grants/:id/approved/:address` | Whether an address has approved a grant |
+| GET | `/api/reviewers/:address/grants` | Full grant details for every grant where `address` is a reviewer |
+| GET | `/api/proposers/:address/grants` | Full grant details for every grant proposed by `address` |
 
 ## Running Tests
 
@@ -132,8 +146,20 @@ cd contracts && npm test
     ✔ tracks hasApproved correctly
     ✔ requires funding on creation
     ✔ rejects invalid quorum threshold
+    ✔ rejects a zero-address recipient
+    ✔ rejects a zero-address reviewer
+    ✔ rejects duplicate reviewers
+    ✔ reverts on getGrant for a non-existent id
+    ✔ reverts on hasApproved for a non-existent id
+    ✔ reverts on approve for a non-existent id
+    ✔ reverts on cancel for a non-existent id
+    ✔ prevents approval after execution
+    ✔ prevents cancellation after execution
+    ✔ indexes grant ids by reviewer
+    ✔ indexes grant ids by proposer
+    ✔ returns an empty array for an address with no grants
 
-  10 passing (1s)
+  22 passing
 ```
 
 ## License
